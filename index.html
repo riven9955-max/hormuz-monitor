@@ -1780,7 +1780,7 @@
         </div>
 
         <div class="footer">
-            <p>数据来源：国际海事组织 | 更新时间：<span class="update-time" id="updateTime">2026-04-02 22:14</span> | 实时监控系统 v5.6 | 📅 每日10:00自动更新</p>
+            <p>数据来源：国际海事组织 | 更新时间：<span class="update-time" id="updateTime">2026-04-02 22:52</span> | 实时监控系统 v5.8 | 📅 每日10:00自动更新</p>
         </div>
     </div>
 
@@ -1798,581 +1798,7 @@
     </div>
 
     <script>
-        // 初始化图表
-        const ctx = document.getElementById('trendChart').getContext('2d');
-        const trendChart = new Chart(ctx, {
-            type: 'line',
-            data: {
-                labels: ['3/27', '3/28', '3/29', '3/30', '3/31', '4/1', '4/2'],
-                datasets: [{
-                    label: '日均通行量（万桶）',
-                    data: [780, 735, 700, 680, 655, 620, 590],
-                    borderColor: '#22aa22',
-                    backgroundColor: 'rgba(34, 170, 34, 0.1)',
-                    borderWidth: 2,
-                    fill: true,
-                    tension: 0.4,
-                    pointBackgroundColor: '#00ccff',
-                    pointBorderColor: '#22aa22',
-                    pointRadius: 5,
-                    pointHoverRadius: 7,
-                    pointBorderWidth: 2
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        labels: {
-                            color: '#d0d0d0',
-                            font: { size: 12, weight: 'bold' }
-                        }
-                    }
-                },
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        max: 2500,
-                        ticks: { color: '#888888' },
-                        grid: { color: 'rgba(58, 58, 58, 0.3)' }
-                    },
-                    x: {
-                        ticks: { color: '#888888' },
-                        grid: { color: 'rgba(58, 58, 58, 0.3)' }
-                    }
-                }
-            }
-        });
-
-        // 生成安全的分享链接（相对路径）
-        function getShareLink() {
-            const filename = window.location.pathname.split('/').pop();
-            return filename || 'hormuz_monitor_final.html';
-        }
-
-        // ========== 登录功能 ==========
-        
-        // 飞书多维表格配置
-        const FEISHU_CONFIG = {
-            // 用户表 - 用于验证账号密码
-            usersTable: {
-                appToken: 'VN1ybbksOao4DxsU3s9cfGbanWe',
-                tableId: 'tblhYHwf26mJgEzQ',
-                fields: {
-                    username: 'fldjtKp1PT',  // 用户名
-                    password: 'fldS4sd0BC',  // 密码
-                    role: 'fldpK7mf8e'       // 角色
-                }
-            },
-            // 统计表 - 用于记录访问统计
-            statsTable: {
-                appToken: 'W1oxbRJksaE0BPsGoPRcofS7nyf',
-                tableId: 'tblb3mRysOl3eVct',
-                fields: {
-                    date: 'fldd4i5TaA',      // 日期
-                    visits: 'fldEPgSYy2',    // 访问次数
-                    visitors: 'fldV9ECvlH'   // 独立访客
-                }
-            }
-        };
-
-        // 当前登录用户
-        let currentUser = null;
-
-        // 显示登录弹窗
-        function showLoginModal() {
-            document.getElementById('loginModal').classList.add('show');
-            document.getElementById('loginUsername').value = '';
-            document.getElementById('loginPassword').value = '';
-            document.getElementById('loginError').style.display = 'none';
-        }
-
-        // 关闭登录弹窗
-        function closeLoginModal() {
-            document.getElementById('loginModal').classList.remove('show');
-        }
-
-        // 执行登录
-        async function doLogin() {
-            const username = document.getElementById('loginUsername').value.trim();
-            const password = document.getElementById('loginPassword').value;
-            
-            if (!username || !password) {
-                showLoginError('请输入用户名和密码');
-                return;
-            }
-
-            try {
-                // 模拟登录验证（实际应调用飞书API）
-                // 这里先用本地验证演示
-                if (username === 'admin' && password === '253224') {
-                    // 登录成功
-                    currentUser = { username: username, role: '管理员' };
-                    localStorage.setItem('hormuz_user', JSON.stringify(currentUser));
-                    
-                    closeLoginModal();
-                    updateLoginUI();
-                    loadStats();
-                    
-                    // 记录登录时间
-                    console.log('用户 ' + username + ' 登录成功');
-                } else {
-                    showLoginError('用户名或密码错误');
-                }
-            } catch (error) {
-                console.error('登录错误:', error);
-                showLoginError('登录失败，请稍后重试');
-            }
-        }
-
-        // 显示登录错误
-        function showLoginError(message) {
-            const errorEl = document.getElementById('loginError');
-            errorEl.textContent = message;
-            errorEl.style.display = 'block';
-        }
-
-        // 更新登录UI
-        function updateLoginUI() {
-            const loginBtn = document.querySelector('.login-btn');
-            const userInfo = document.getElementById('userInfo');
-            const userName = document.getElementById('userName');
-            
-            if (currentUser) {
-                loginBtn.style.display = 'none';
-                userInfo.style.display = 'flex';
-                userName.textContent = '👤 ' + currentUser.username;
-            } else {
-                loginBtn.style.display = 'block';
-                userInfo.style.display = 'none';
-            }
-        }
-
-        // 退出登录
-        function logout() {
-            currentUser = null;
-            localStorage.removeItem('hormuz_user');
-            document.getElementById('statsPanel').classList.remove('show');
-            updateLoginUI();
-        }
-
-        // 加载统计数据
-        async function loadStats() {
-            // 显示统计面板
-            document.getElementById('statsPanel').classList.add('show');
-            
-            // 模拟数据（实际应从飞书获取）
-            const today = new Date().toLocaleDateString('zh-CN');
-            document.getElementById('todayVisits').textContent = Math.floor(Math.random() * 100) + 50;
-            document.getElementById('uniqueVisitors').textContent = Math.floor(Math.random() * 50) + 20;
-            document.getElementById('updateTime').textContent = today;
-        }
-
-        // 检查登录状态
-        function checkLoginStatus() {
-            const savedUser = localStorage.getItem('hormuz_user');
-            if (savedUser) {
-                currentUser = JSON.parse(savedUser);
-                updateLoginUI();
-            }
-        }
-
-        // 记录访问（每次页面加载时调用）
-        function recordVisit() {
-            // 生成唯一访客ID
-            let visitorId = localStorage.getItem('hormuz_visitor_id');
-            if (!visitorId) {
-                visitorId = 'visitor_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
-                localStorage.setItem('hormuz_visitor_id', visitorId);
-            }
-            
-            // 实际项目中应调用飞书API更新访问次数
-            console.log('访问记录: visitorId=' + visitorId);
-        }
-
-        // ========== 分享功能 ==========
-        function shareToWeChat() {
-            const url = getShareLink();
-            alert('📱 微信分享\n\n请使用微信扫描二维码或复制链接分享：\n' + url);
-        }
-
-        function shareToQQ() {
-            const url = getShareLink();
-            const title = '霍尔木兹海峡流通监控系统';
-            const desc = '实时监控霍尔木兹海峡流通情况，关注全球能源动态';
-            window.open(`https://connect.qq.com/widget/shareqq/index.html?url=${encodeURIComponent(url)}&title=${encodeURIComponent(title)}&desc=${encodeURIComponent(desc)}`);
-        }
-
-        function copyShareLink() {
-            const container = document.getElementById('shareLinkContainer');
-            container.classList.toggle('show');
-            if (container.classList.contains('show')) {
-                document.getElementById('shareLink').value = getShareLink();
-            }
-        }
-
-        function copyToClipboard() {
-            const shareLink = document.getElementById('shareLink');
-            shareLink.select();
-            document.execCommand('copy');
-            alert('✅ 链接已复制到剪贴板！');
-        }
-
-        // 实时更新数据
-        function updateData() {
-            const now = new Date();
-            const hours = String(now.getHours()).padStart(2, '0');
-            const minutes = String(now.getMinutes()).padStart(2, '0');
-            document.getElementById('updateTime').textContent = `2026-03-31 ${hours}:${minutes}`;
-
-            // 模拟数据波动（基于最新局势，通行量持续下降）
-            const baseCapacity = 590 + Math.random() * 60 - 30;
-            const capacity = Math.max(550, Math.round(baseCapacity));
-            const rate = Math.round((capacity / 2100) * 100);
-
-            document.getElementById('dailyCapacity').innerHTML = `${capacity}<span class="status-unit">万桶</span>`;
-            document.getElementById('passageRate').innerHTML = `${rate}<span class="status-unit">%</span>`;
-
-            // 更新船舶数量
-            document.getElementById('tankerCount').textContent = Math.floor(7 + Math.random() * 4);
-            document.getElementById('cargoCount').textContent = Math.floor(5 + Math.random() * 3);
-            document.getElementById('containerCount').textContent = Math.floor(2 + Math.random() * 3);
-            document.getElementById('otherCount').textContent = Math.floor(1 + Math.random() * 3);
-
-            // 更新油价（基于最新价格）
-            const brentBase = 93.5;
-            const wtiBase = 89.2;
-            const gasBase = 4.35;
-            
-            const brent = (brentBase + (Math.random() - 0.5) * 2).toFixed(2);
-            const wti = (wtiBase + (Math.random() - 0.5) * 2).toFixed(2);
-            const gas = (gasBase + (Math.random() - 0.5) * 0.2).toFixed(2);
-            
-            document.getElementById('brentPrice').textContent = `$${brent}`;
-            document.getElementById('wtiPrice').textContent = `$${wti}`;
-            document.getElementById('gasPrice').textContent = `$${gas}`;
-            
-            document.getElementById('brentChange').textContent = `+${(Math.random() * 2 + 2).toFixed(1)}%`;
-            document.getElementById('wtiChange').textContent = `+${(Math.random() * 2 + 2).toFixed(1)}%`;
-            document.getElementById('gasChange').textContent = `+${(Math.random() * 1 + 1).toFixed(1)}%`;
-
-            // 更新VIX恐慌指数（基于伊朗战争影响，当前约28-30区间）
-            const vixBase = 28.30;
-            const vix = (vixBase + (Math.random() - 0.5) * 3).toFixed(2);
-            document.getElementById('vixValue').textContent = vix;
-            document.getElementById('vixBar').style.width = `${Math.min(vix / 50 * 100, 100)}%`;
-            
-            // VIX状态判断
-            let vixStatus = '';
-            let vixColor = '';
-            if (vix < 15) {
-                vixStatus = '✅ 市场平静';
-                vixColor = '#22aa22';
-            } else if (vix < 20) {
-                vixStatus = 'ℹ️ 正常波动';
-                vixColor = '#4ade80';
-            } else if (vix < 25) {
-                vixStatus = '⚠️ 轻度恐慌';
-                vixColor = '#ffaa00';
-            } else if (vix < 30) {
-                vixStatus = '🔴 高度恐慌';
-                vixColor = '#ff4444';
-            } else {
-                vixStatus = '🚨 极度恐慌';
-                vixColor = '#ff0000';
-            }
-            const vixStatusEl = document.getElementById('vixStatus');
-            vixStatusEl.textContent = vixStatus;
-            vixStatusEl.style.color = vixColor;
-            document.getElementById('vixValue').style.color = vixColor;
-
-            // 更新贵金属价格（基于最新价格）
-            const goldBase = 2245;
-            const silverBase = 26.50;
-            const copperBase = 4.60;
-            const platinumBase = 1110;
-            
-            const gold = (goldBase + (Math.random() - 0.5) * 50).toFixed(0);
-            const silver = (silverBase + (Math.random() - 0.5) * 1).toFixed(2);
-            const copper = (copperBase + (Math.random() - 0.5) * 0.3).toFixed(2);
-            const platinum = (platinumBase + (Math.random() - 0.5) * 30).toFixed(0);
-            
-            document.getElementById('goldPrice').textContent = `$${gold}/盎司`;
-            document.getElementById('silverPrice').textContent = `$${silver}/盎司`;
-            document.getElementById('copperPrice').textContent = `$${copper}/磅`;
-            document.getElementById('platinumPrice').textContent = `$${platinum}/盎司`;
-            
-            document.getElementById('goldChange').textContent = `+${(Math.random() * 2 + 1).toFixed(1)}%`;
-            document.getElementById('silverChange').textContent = `+${(Math.random() * 2 + 1).toFixed(1)}%`;
-            document.getElementById('copperChange').textContent = `+${(Math.random() * 3 + 1).toFixed(1)}%`;
-            document.getElementById('platinumChange').textContent = `+${(Math.random() * 1.5 + 0.5).toFixed(1)}%`;
-
-            // 更新中国贵金属价格（沪金所数据，人民币计价）
-            // 黄金：约1005元/克（3/31实时），白银沪金所溢价约12%
-            const cnGoldBase = 1005;
-            const cnSilverBase = 8950;   // 元/千克
-            const cnPlatinumBase = 14680; // 元/克（铂金，折算）
-            const cnPalladiumBase = 10820; // 元/克（钯金）
-
-            const cnGold = (cnGoldBase + (Math.random() - 0.5) * 20).toFixed(0);
-            const cnSilver = (cnSilverBase + (Math.random() - 0.5) * 200).toFixed(0);
-            const cnPlatinum = (cnPlatinumBase + (Math.random() - 0.5) * 300).toFixed(0);
-            const cnPalladium = (cnPalladiumBase + (Math.random() - 0.5) * 300).toFixed(0);
-
-            document.getElementById('cnGoldPrice').textContent = `¥${Number(cnGold).toLocaleString()}/克`;
-            document.getElementById('cnSilverPrice').textContent = `¥${Number(cnSilver).toLocaleString()}/千克`;
-            document.getElementById('cnPlatinumPrice').textContent = `¥${Number(cnPlatinum).toLocaleString()}/克`;
-            document.getElementById('cnPalladiumPrice').textContent = `¥${Number(cnPalladium).toLocaleString()}/克`;
-
-            // 中国贵金属涨跌（黄金白银受战争影响上涨，铂钯受工业需求下滑影响下跌）
-            document.getElementById('cnGoldChange').textContent = `+${(Math.random() * 1.5 + 1.5).toFixed(1)}%`;
-            document.getElementById('cnSilverChange').textContent = `+${(Math.random() * 3 + 10).toFixed(1)}%`;
-            document.getElementById('cnPlatinumChange').textContent = `-${(Math.random() * 2 + 3.5).toFixed(1)}%`;
-            document.getElementById('cnPalladiumChange').textContent = `-${(Math.random() * 2 + 5.5).toFixed(1)}%`;
-            // 铂钯下跌用红色→绿色（跌）
-            document.querySelector('#cnPlatinumPrice').closest('tr').querySelector('td:last-child').style.color = '#22aa22';
-            document.querySelector('#cnPalladiumPrice').closest('tr').querySelector('td:last-child').style.color = '#22aa22';
-        }
-
-        // 每30秒更新一次
-        setInterval(updateData, 30000);
-
-        // === 船舶通行模拟引擎 ===
-        const shipTypes = [
-            { type: 'tanker', label: '油轮', color: '#4a6a8a', speed: [8, 14], size: 'large', weight: 40 },
-            { type: 'cargo', label: '货轮', color: '#5a5a5a', speed: [10, 16], size: 'medium', weight: 25 },
-            { type: 'container', label: '集装箱船', color: '#2a5a2a', speed: [7, 12], size: 'xlarge', weight: 20 },
-            { type: 'military', label: '军舰', color: '#6a6a6a', speed: [6, 10], size: 'medium', weight: 10 },
-            { type: 'tanker', label: '小型油轮', color: '#3a5a7a', speed: [12, 18], size: 'small', weight: 5 }
-        ];
-
-        const straitViz = document.getElementById('straitViz');
-        let activeShips = [];
-        let shipIdCounter = 0;
-
-        function pickShipType() {
-            const total = shipTypes.reduce((s, t) => s + t.weight, 0);
-            let r = Math.random() * total;
-            for (const t of shipTypes) {
-                r -= t.weight;
-                if (r <= 0) return t;
-            }
-            return shipTypes[0];
-        }
-
-        function createShipElement(shipData) {
-            const ship = document.createElement('div');
-            ship.className = `ship ship-${shipData.type}`;
-            ship.dataset.id = shipData.id;
-            ship.style.left = '-60px';
-            ship.style.opacity = '0';
-            ship.style.transition = 'opacity 0.8s';
-            
-            // 延迟淡入（模拟从远处出现）
-            setTimeout(() => { ship.style.opacity = '0.9'; }, 100);
-            
-            // 随机Y位置，避免海岸线
-            const minY = 45;
-            const maxY = 235;
-            const y = minY + Math.random() * (maxY - minY);
-            ship.style.top = y + 'px';
-            
-            // 微小Y轴摆动
-            const wobble = (Math.random() - 0.5) * 6;
-            
-            ship.innerHTML = `
-                <div class="ship-wake"></div>
-                <div class="ship-body"></div>
-                <div class="ship-light" style="animation-delay: ${Math.random() * 2}s"></div>
-            `;
-
-            // 添加船舶标签
-            const label = document.createElement('div');
-            label.style.cssText = `
-                position: absolute; bottom: -14px; left: 50%; transform: translateX(-50%);
-                font-size: 0.5em; color: rgba(150,180,210,0.5); white-space: nowrap;
-            `;
-            label.textContent = shipData.label;
-            ship.appendChild(label);
-
-            return { el: ship, x: -60, y: y, wobble: wobble, wobbleSpeed: 0.02 + Math.random() * 0.02, wobblePhase: Math.random() * Math.PI * 2 };
-        }
-
-        function spawnShip() {
-            const typeInfo = pickShipType();
-            const speed = typeInfo.speed[0] + Math.random() * (typeInfo.speed[1] - typeInfo.speed[0]);
-            const id = shipIdCounter++;
-            const data = {
-                id,
-                type: typeInfo.type,
-                label: typeInfo.label,
-                speed: speed * 0.15, // scale for pixels
-                dir: Math.random() > 0.35 ? 1 : -1 // 65% 向右，35% 向左
-            };
-
-            const shipObj = createShipElement(data);
-            shipObj.speed = data.speed;
-            shipObj.baseSpeed = data.speed;
-            shipObj.dir = data.dir;
-            
-            if (data.dir === -1) {
-                shipObj.x = straitViz.offsetWidth + 60;
-                shipObj.el.style.transform = 'scaleX(-1)';
-            }
-
-            activeShips.push(shipObj);
-            straitViz.appendChild(shipObj.el);
-        }
-
-        function updateShips() {
-            const vizWidth = straitViz.offsetWidth;
-            const now = Date.now();
-            
-            for (let i = activeShips.length - 1; i >= 0; i--) {
-                const s = activeShips[i];
-                
-                // 动态速度变化（模拟海流和引擎波动）
-                const speedVar = Math.sin(now * 0.001 + s.wobblePhase * 3) * 0.3;
-                s.x += (s.speed + speedVar) * s.dir;
-                
-                // Y轴微摆（模拟海浪颠簸）
-                s.wobblePhase += s.wobbleSpeed;
-                const wobbleY = Math.sin(s.wobblePhase) * s.wobble;
-                
-                // 微小旋转（模拟船体摇晃）
-                const rollAngle = Math.sin(s.wobblePhase * 0.7) * 1.5;
-                
-                s.el.style.top = (s.y + wobbleY) + 'px';
-                s.el.style.left = s.x + 'px';
-                s.el.style.transform = (s.dir === -1 ? 'scaleX(-1)' : '') + `rotate(${rollAngle}deg)`;
-                
-                // 接近危险区域时减速
-                const dangerZones = straitViz.querySelectorAll('.danger-zone');
-                dangerZones.forEach(zone => {
-                    const zoneRect = zone.getBoundingClientRect();
-                    const vizRect = straitViz.getBoundingClientRect();
-                    const zoneLeft = zoneRect.left - vizRect.left;
-                    const zoneRight = zoneRect.right - vizRect.left;
-                    if (s.x > zoneLeft - 30 && s.x < zoneRight + 30) {
-                        s.speed = Math.max(s.baseSpeed * 0.4, s.speed * 0.995);
-                        // 在危险区附近添加闪烁效果
-                        if (Math.random() < 0.05) {
-                            s.el.querySelector('.ship-light').style.background = '#ff0000';
-                            s.el.querySelector('.ship-light').style.boxShadow = '0 0 8px #ff0000';
-                            setTimeout(() => {
-                                if (s.el.querySelector('.ship-light')) {
-                                    s.el.querySelector('.ship-light').style.background = '#ff4444';
-                                    s.el.querySelector('.ship-light').style.boxShadow = '0 0 6px #ff4444';
-                                }
-                            }, 800);
-                        }
-                    } else {
-                        // 逐渐恢复正常速度
-                        s.speed += (s.baseSpeed - s.speed) * 0.01;
-                    }
-                });
-
-                // 船舶相遇避让
-                for (let j = 0; j < activeShips.length; j++) {
-                    if (i === j) continue;
-                    const other = activeShips[j];
-                    const dist = Math.abs(s.x - other.x);
-                    const yDist = Math.abs(s.y - other.y);
-                    if (dist < 50 && yDist < 25) {
-                        // Y方向避让
-                        const avoidDir = s.y < other.y ? -1 : 1;
-                        s.y += avoidDir * 0.5;
-                        s.y = Math.max(45, Math.min(235, s.y));
-                    }
-                }
-
-                // 超出屏幕则移除
-                if ((s.dir === 1 && s.x > vizWidth + 70) || (s.dir === -1 && s.x < -70)) {
-                    // 消失时淡出
-                    s.el.style.opacity = '0';
-                    s.el.style.transition = 'opacity 0.5s';
-                    setTimeout(() => {
-                        if (s.el.parentNode) s.el.remove();
-                    }, 500);
-                    activeShips.splice(i, 1);
-                }
-            }
-        }
-
-        // 初始化生成几艘船
-        for (let i = 0; i < 5; i++) {
-            const typeInfo = pickShipType();
-            const speed = typeInfo.speed[0] + Math.random() * (typeInfo.speed[1] - typeInfo.speed[0]);
-            const id = shipIdCounter++;
-            const dir = Math.random() > 0.35 ? 1 : -1;
-            const shipObj = {
-                id,
-                type: typeInfo.type,
-                label: typeInfo.label,
-                speed: speed * 0.15,
-                baseSpeed: speed * 0.15,
-                dir,
-                x: dir === 1 ? (50 + Math.random() * (straitViz.offsetWidth - 100)) : (50 + Math.random() * (straitViz.offsetWidth - 100)),
-                y: 45 + Math.random() * 190,
-                wobble: (Math.random() - 0.5) * 6,
-                wobbleSpeed: 0.02 + Math.random() * 0.02,
-                wobblePhase: Math.random() * Math.PI * 2
-            };
-            const el = createShipElement(shipObj);
-            el.style.left = shipObj.x + 'px';
-            if (dir === -1) el.style.transform = 'scaleX(-1)';
-            shipObj.el = el;
-            activeShips.push(shipObj);
-            straitViz.appendChild(el);
-        }
-
-        // 动画循环
-        function animateShips() {
-            updateShips();
-            requestAnimationFrame(animateShips);
-        }
-        animateShips();
-
-        // 生成水面光斑效果
-        function createSeaGlare() {
-            const glare = document.createElement('div');
-            glare.className = 'sea-glare';
-            glare.style.top = (45 + Math.random() * 190) + 'px';
-            glare.style.animationDuration = (6 + Math.random() * 6) + 's';
-            glare.style.animationDelay = Math.random() * 8 + 's';
-            glare.style.width = (30 + Math.random() * 80) + 'px';
-            straitViz.appendChild(glare);
-            
-            // 循环
-            setTimeout(() => {
-                if (glare.parentNode) glare.remove();
-                createSeaGlare();
-            }, 15000 + Math.random() * 10000);
-        }
-        for (let i = 0; i < 5; i++) createSeaGlare();
-
-        // 定期生成新船（模拟受限通行）
-        setInterval(() => {
-            if (activeShips.length < 12) {
-                spawnShip();
-            }
-        }, 2500 + Math.random() * 2000);
-
-        // 随机生成间隔
-        function scheduleNextShip() {
-            const delay = 3000 + Math.random() * 4000;
-            setTimeout(() => {
-                if (activeShips.length < 15) {
-                    spawnShip();
-                }
-                scheduleNextShip();
-            }, delay);
-        }
-        scheduleNextShip();
-
-        // 新闻详情数据（含来源链接）
-        const newsDetails = {
+const newsDetails = {
             'iran_retaliation': {
                 title: '伊朗对以色列发动报复性导弹袭击',
                 content: `
@@ -3063,10 +2489,588 @@
             }
         };
 
+        //         // 初始化图表
+        const ctx = document.getElementById('trendChart').getContext('2d');
+        const trendChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: ['3/27', '3/28', '3/29', '3/30', '3/31', '4/1', '4/2'],
+                datasets: [{
+                    label: '日均通行量（万桶）',
+                    data: [780, 735, 700, 680, 655, 620, 590],
+                    borderColor: '#22aa22',
+                    backgroundColor: 'rgba(34, 170, 34, 0.1)',
+                    borderWidth: 2,
+                    fill: true,
+                    tension: 0.4,
+                    pointBackgroundColor: '#00ccff',
+                    pointBorderColor: '#22aa22',
+                    pointRadius: 5,
+                    pointHoverRadius: 7,
+                    pointBorderWidth: 2
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        labels: {
+                            color: '#d0d0d0',
+                            font: { size: 12, weight: 'bold' }
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        max: 2500,
+                        ticks: { color: '#888888' },
+                        grid: { color: 'rgba(58, 58, 58, 0.3)' }
+                    },
+                    x: {
+                        ticks: { color: '#888888' },
+                        grid: { color: 'rgba(58, 58, 58, 0.3)' }
+                    }
+                }
+            }
+        });
+
+        // 生成安全的分享链接（相对路径）
+        function getShareLink() {
+            const filename = window.location.pathname.split('/').pop();
+            return filename || 'hormuz_monitor_final.html';
+        }
+
+        // ========== 登录功能 ==========
+        
+        // 飞书多维表格配置
+        const FEISHU_CONFIG = {
+            // 用户表 - 用于验证账号密码
+            usersTable: {
+                appToken: 'VN1ybbksOao4DxsU3s9cfGbanWe',
+                tableId: 'tblhYHwf26mJgEzQ',
+                fields: {
+                    username: 'fldjtKp1PT',  // 用户名
+                    password: 'fldS4sd0BC',  // 密码
+                    role: 'fldpK7mf8e'       // 角色
+                }
+            },
+            // 统计表 - 用于记录访问统计
+            statsTable: {
+                appToken: 'W1oxbRJksaE0BPsGoPRcofS7nyf',
+                tableId: 'tblb3mRysOl3eVct',
+                fields: {
+                    date: 'fldd4i5TaA',      // 日期
+                    visits: 'fldEPgSYy2',    // 访问次数
+                    visitors: 'fldV9ECvlH'   // 独立访客
+                }
+            }
+        };
+
+        // 当前登录用户
+        let currentUser = null;
+
+        // 显示登录弹窗
+        function showLoginModal() {
+            document.getElementById('loginModal').classList.add('show');
+            document.getElementById('loginUsername').value = '';
+            document.getElementById('loginPassword').value = '';
+            document.getElementById('loginError').style.display = 'none';
+        }
+
+        // 关闭登录弹窗
+        function closeLoginModal() {
+            document.getElementById('loginModal').classList.remove('show');
+        }
+
+        // 执行登录
+        async function doLogin() {
+            const username = document.getElementById('loginUsername').value.trim();
+            const password = document.getElementById('loginPassword').value;
+            
+            if (!username || !password) {
+                showLoginError('请输入用户名和密码');
+                return;
+            }
+
+            try {
+                // 模拟登录验证（实际应调用飞书API）
+                // 这里先用本地验证演示
+                if (username === 'admin' && password === '253224') {
+                    // 登录成功
+                    currentUser = { username: username, role: '管理员' };
+                    localStorage.setItem('hormuz_user', JSON.stringify(currentUser));
+                    
+                    closeLoginModal();
+                    updateLoginUI();
+                    loadStats();
+                    
+                    // 记录登录时间
+                    console.log('用户 ' + username + ' 登录成功');
+                } else {
+                    showLoginError('用户名或密码错误');
+                }
+            } catch (error) {
+                console.error('登录错误:', error);
+                showLoginError('登录失败，请稍后重试');
+            }
+        }
+
+        // 显示登录错误
+        function showLoginError(message) {
+            const errorEl = document.getElementById('loginError');
+            errorEl.textContent = message;
+            errorEl.style.display = 'block';
+        }
+
+        // 更新登录UI
+        function updateLoginUI() {
+            const loginBtn = document.querySelector('.login-btn');
+            const userInfo = document.getElementById('userInfo');
+            const userName = document.getElementById('userName');
+            
+            if (currentUser) {
+                loginBtn.style.display = 'none';
+                userInfo.style.display = 'flex';
+                userName.textContent = '👤 ' + currentUser.username;
+            } else {
+                loginBtn.style.display = 'block';
+                userInfo.style.display = 'none';
+            }
+        }
+
+        // 退出登录
+        function logout() {
+            currentUser = null;
+            localStorage.removeItem('hormuz_user');
+            document.getElementById('statsPanel').classList.remove('show');
+            updateLoginUI();
+        }
+
+        // 加载统计数据
+        async function loadStats() {
+            // 显示统计面板
+            document.getElementById('statsPanel').classList.add('show');
+            
+            // 模拟数据（实际应从飞书获取）
+            const today = new Date().toLocaleDateString('zh-CN');
+            document.getElementById('todayVisits').textContent = Math.floor(Math.random() * 100) + 50;
+            document.getElementById('uniqueVisitors').textContent = Math.floor(Math.random() * 50) + 20;
+            document.getElementById('updateTime').textContent = today;
+        }
+
+        // 检查登录状态
+        function checkLoginStatus() {
+            const savedUser = localStorage.getItem('hormuz_user');
+            if (savedUser) {
+                currentUser = JSON.parse(savedUser);
+                updateLoginUI();
+            }
+        }
+
+        // 记录访问（每次页面加载时调用）
+        function recordVisit() {
+            // 生成唯一访客ID
+            let visitorId = localStorage.getItem('hormuz_visitor_id');
+            if (!visitorId) {
+                visitorId = 'visitor_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+                localStorage.setItem('hormuz_visitor_id', visitorId);
+            }
+            
+            // 实际项目中应调用飞书API更新访问次数
+            console.log('访问记录: visitorId=' + visitorId);
+        }
+
+        // ========== 分享功能 ==========
+        function shareToWeChat() {
+            const url = getShareLink();
+            alert('📱 微信分享\n\n请使用微信扫描二维码或复制链接分享：\n' + url);
+        }
+
+        function shareToQQ() {
+            const url = getShareLink();
+            const title = '霍尔木兹海峡流通监控系统';
+            const desc = '实时监控霍尔木兹海峡流通情况，关注全球能源动态';
+            window.open(`https://connect.qq.com/widget/shareqq/index.html?url=${encodeURIComponent(url)}&title=${encodeURIComponent(title)}&desc=${encodeURIComponent(desc)}`);
+        }
+
+        function copyShareLink() {
+            const container = document.getElementById('shareLinkContainer');
+            container.classList.toggle('show');
+            if (container.classList.contains('show')) {
+                document.getElementById('shareLink').value = getShareLink();
+            }
+        }
+
+        function copyToClipboard() {
+            const shareLink = document.getElementById('shareLink');
+            shareLink.select();
+            document.execCommand('copy');
+            alert('✅ 链接已复制到剪贴板！');
+        }
+
+        // 实时更新数据
+        function updateData() {
+            const now = new Date();
+            const hours = String(now.getHours()).padStart(2, '0');
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            document.getElementById('updateTime').textContent = `2026-03-31 ${hours}:${minutes}`;
+
+            // 模拟数据波动（基于最新局势，通行量持续下降）
+            const baseCapacity = 590 + Math.random() * 60 - 30;
+            const capacity = Math.max(550, Math.round(baseCapacity));
+            const rate = Math.round((capacity / 2100) * 100);
+
+            document.getElementById('dailyCapacity').innerHTML = `${capacity}<span class="status-unit">万桶</span>`;
+            document.getElementById('passageRate').innerHTML = `${rate}<span class="status-unit">%</span>`;
+
+            // 更新船舶数量
+            document.getElementById('tankerCount').textContent = Math.floor(7 + Math.random() * 4);
+            document.getElementById('cargoCount').textContent = Math.floor(5 + Math.random() * 3);
+            document.getElementById('containerCount').textContent = Math.floor(2 + Math.random() * 3);
+            document.getElementById('otherCount').textContent = Math.floor(1 + Math.random() * 3);
+
+            // 更新油价（基于最新价格）
+            const brentBase = 93.5;
+            const wtiBase = 89.2;
+            const gasBase = 4.35;
+            
+            const brent = (brentBase + (Math.random() - 0.5) * 2).toFixed(2);
+            const wti = (wtiBase + (Math.random() - 0.5) * 2).toFixed(2);
+            const gas = (gasBase + (Math.random() - 0.5) * 0.2).toFixed(2);
+            
+            document.getElementById('brentPrice').textContent = `$${brent}`;
+            document.getElementById('wtiPrice').textContent = `$${wti}`;
+            document.getElementById('gasPrice').textContent = `$${gas}`;
+            
+            document.getElementById('brentChange').textContent = `+${(Math.random() * 2 + 2).toFixed(1)}%`;
+            document.getElementById('wtiChange').textContent = `+${(Math.random() * 2 + 2).toFixed(1)}%`;
+            document.getElementById('gasChange').textContent = `+${(Math.random() * 1 + 1).toFixed(1)}%`;
+
+            // 更新VIX恐慌指数（基于伊朗战争影响，当前约28-30区间）
+            const vixBase = 28.30;
+            const vix = (vixBase + (Math.random() - 0.5) * 3).toFixed(2);
+            document.getElementById('vixValue').textContent = vix;
+            document.getElementById('vixBar').style.width = `${Math.min(vix / 50 * 100, 100)}%`;
+            
+            // VIX状态判断
+            let vixStatus = '';
+            let vixColor = '';
+            if (vix < 15) {
+                vixStatus = '✅ 市场平静';
+                vixColor = '#22aa22';
+            } else if (vix < 20) {
+                vixStatus = 'ℹ️ 正常波动';
+                vixColor = '#4ade80';
+            } else if (vix < 25) {
+                vixStatus = '⚠️ 轻度恐慌';
+                vixColor = '#ffaa00';
+            } else if (vix < 30) {
+                vixStatus = '🔴 高度恐慌';
+                vixColor = '#ff4444';
+            } else {
+                vixStatus = '🚨 极度恐慌';
+                vixColor = '#ff0000';
+            }
+            const vixStatusEl = document.getElementById('vixStatus');
+            vixStatusEl.textContent = vixStatus;
+            vixStatusEl.style.color = vixColor;
+            document.getElementById('vixValue').style.color = vixColor;
+
+            // 更新贵金属价格（基于最新价格）
+            const goldBase = 2245;
+            const silverBase = 26.50;
+            const copperBase = 4.60;
+            const platinumBase = 1110;
+            
+            const gold = (goldBase + (Math.random() - 0.5) * 50).toFixed(0);
+            const silver = (silverBase + (Math.random() - 0.5) * 1).toFixed(2);
+            const copper = (copperBase + (Math.random() - 0.5) * 0.3).toFixed(2);
+            const platinum = (platinumBase + (Math.random() - 0.5) * 30).toFixed(0);
+            
+            document.getElementById('goldPrice').textContent = `$${gold}/盎司`;
+            document.getElementById('silverPrice').textContent = `$${silver}/盎司`;
+            document.getElementById('copperPrice').textContent = `$${copper}/磅`;
+            document.getElementById('platinumPrice').textContent = `$${platinum}/盎司`;
+            
+            document.getElementById('goldChange').textContent = `+${(Math.random() * 2 + 1).toFixed(1)}%`;
+            document.getElementById('silverChange').textContent = `+${(Math.random() * 2 + 1).toFixed(1)}%`;
+            document.getElementById('copperChange').textContent = `+${(Math.random() * 3 + 1).toFixed(1)}%`;
+            document.getElementById('platinumChange').textContent = `+${(Math.random() * 1.5 + 0.5).toFixed(1)}%`;
+
+            // 更新中国贵金属价格（沪金所数据，人民币计价）
+            // 黄金：约1005元/克（3/31实时），白银沪金所溢价约12%
+            const cnGoldBase = 1005;
+            const cnSilverBase = 8950;   // 元/千克
+            const cnPlatinumBase = 14680; // 元/克（铂金，折算）
+            const cnPalladiumBase = 10820; // 元/克（钯金）
+
+            const cnGold = (cnGoldBase + (Math.random() - 0.5) * 20).toFixed(0);
+            const cnSilver = (cnSilverBase + (Math.random() - 0.5) * 200).toFixed(0);
+            const cnPlatinum = (cnPlatinumBase + (Math.random() - 0.5) * 300).toFixed(0);
+            const cnPalladium = (cnPalladiumBase + (Math.random() - 0.5) * 300).toFixed(0);
+
+            document.getElementById('cnGoldPrice').textContent = `¥${Number(cnGold).toLocaleString()}/克`;
+            document.getElementById('cnSilverPrice').textContent = `¥${Number(cnSilver).toLocaleString()}/千克`;
+            document.getElementById('cnPlatinumPrice').textContent = `¥${Number(cnPlatinum).toLocaleString()}/克`;
+            document.getElementById('cnPalladiumPrice').textContent = `¥${Number(cnPalladium).toLocaleString()}/克`;
+
+            // 中国贵金属涨跌（黄金白银受战争影响上涨，铂钯受工业需求下滑影响下跌）
+            document.getElementById('cnGoldChange').textContent = `+${(Math.random() * 1.5 + 1.5).toFixed(1)}%`;
+            document.getElementById('cnSilverChange').textContent = `+${(Math.random() * 3 + 10).toFixed(1)}%`;
+            document.getElementById('cnPlatinumChange').textContent = `-${(Math.random() * 2 + 3.5).toFixed(1)}%`;
+            document.getElementById('cnPalladiumChange').textContent = `-${(Math.random() * 2 + 5.5).toFixed(1)}%`;
+            // 铂钯下跌用红色→绿色（跌）
+            document.querySelector('#cnPlatinumPrice').closest('tr').querySelector('td:last-child').style.color = '#22aa22';
+            document.querySelector('#cnPalladiumPrice').closest('tr').querySelector('td:last-child').style.color = '#22aa22';
+        }
+
+        // 每30秒更新一次
+        setInterval(updateData, 30000);
+
+        // === 船舶通行模拟引擎 ===
+        const shipTypes = [
+            { type: 'tanker', label: '油轮', color: '#4a6a8a', speed: [8, 14], size: 'large', weight: 40 },
+            { type: 'cargo', label: '货轮', color: '#5a5a5a', speed: [10, 16], size: 'medium', weight: 25 },
+            { type: 'container', label: '集装箱船', color: '#2a5a2a', speed: [7, 12], size: 'xlarge', weight: 20 },
+            { type: 'military', label: '军舰', color: '#6a6a6a', speed: [6, 10], size: 'medium', weight: 10 },
+            { type: 'tanker', label: '小型油轮', color: '#3a5a7a', speed: [12, 18], size: 'small', weight: 5 }
+        ];
+
+        const straitViz = document.getElementById('straitViz');
+        let activeShips = [];
+        let shipIdCounter = 0;
+
+        function pickShipType() {
+            const total = shipTypes.reduce((s, t) => s + t.weight, 0);
+            let r = Math.random() * total;
+            for (const t of shipTypes) {
+                r -= t.weight;
+                if (r <= 0) return t;
+            }
+            return shipTypes[0];
+        }
+
+        function createShipElement(shipData) {
+            const ship = document.createElement('div');
+            ship.className = `ship ship-${shipData.type}`;
+            ship.dataset.id = shipData.id;
+            ship.style.left = '-60px';
+            ship.style.opacity = '0';
+            ship.style.transition = 'opacity 0.8s';
+            
+            // 延迟淡入（模拟从远处出现）
+            setTimeout(() => { ship.style.opacity = '0.9'; }, 100);
+            
+            // 随机Y位置，避免海岸线
+            const minY = 45;
+            const maxY = 235;
+            const y = minY + Math.random() * (maxY - minY);
+            ship.style.top = y + 'px';
+            
+            // 微小Y轴摆动
+            const wobble = (Math.random() - 0.5) * 6;
+            
+            ship.innerHTML = `
+                <div class="ship-wake"></div>
+                <div class="ship-body"></div>
+                <div class="ship-light" style="animation-delay: ${Math.random() * 2}s"></div>
+            `;
+
+            // 添加船舶标签
+            const label = document.createElement('div');
+            label.style.cssText = `
+                position: absolute; bottom: -14px; left: 50%; transform: translateX(-50%);
+                font-size: 0.5em; color: rgba(150,180,210,0.5); white-space: nowrap;
+            `;
+            label.textContent = shipData.label;
+            ship.appendChild(label);
+
+            return { el: ship, x: -60, y: y, wobble: wobble, wobbleSpeed: 0.02 + Math.random() * 0.02, wobblePhase: Math.random() * Math.PI * 2 };
+        }
+
+        function spawnShip() {
+            const typeInfo = pickShipType();
+            const speed = typeInfo.speed[0] + Math.random() * (typeInfo.speed[1] - typeInfo.speed[0]);
+            const id = shipIdCounter++;
+            const data = {
+                id,
+                type: typeInfo.type,
+                label: typeInfo.label,
+                speed: speed * 0.15, // scale for pixels
+                dir: Math.random() > 0.35 ? 1 : -1 // 65% 向右，35% 向左
+            };
+
+            const shipObj = createShipElement(data);
+            shipObj.speed = data.speed;
+            shipObj.baseSpeed = data.speed;
+            shipObj.dir = data.dir;
+            
+            if (data.dir === -1) {
+                shipObj.x = straitViz.offsetWidth + 60;
+                shipObj.el.style.transform = 'scaleX(-1)';
+            }
+
+            activeShips.push(shipObj);
+            straitViz.appendChild(shipObj.el);
+        }
+
+        function updateShips() {
+            const vizWidth = straitViz.offsetWidth;
+            const now = Date.now();
+            
+            for (let i = activeShips.length - 1; i >= 0; i--) {
+                const s = activeShips[i];
+                
+                // 动态速度变化（模拟海流和引擎波动）
+                const speedVar = Math.sin(now * 0.001 + s.wobblePhase * 3) * 0.3;
+                s.x += (s.speed + speedVar) * s.dir;
+                
+                // Y轴微摆（模拟海浪颠簸）
+                s.wobblePhase += s.wobbleSpeed;
+                const wobbleY = Math.sin(s.wobblePhase) * s.wobble;
+                
+                // 微小旋转（模拟船体摇晃）
+                const rollAngle = Math.sin(s.wobblePhase * 0.7) * 1.5;
+                
+                s.el.style.top = (s.y + wobbleY) + 'px';
+                s.el.style.left = s.x + 'px';
+                s.el.style.transform = (s.dir === -1 ? 'scaleX(-1)' : '') + `rotate(${rollAngle}deg)`;
+                
+                // 接近危险区域时减速
+                const dangerZones = straitViz.querySelectorAll('.danger-zone');
+                dangerZones.forEach(zone => {
+                    const zoneRect = zone.getBoundingClientRect();
+                    const vizRect = straitViz.getBoundingClientRect();
+                    const zoneLeft = zoneRect.left - vizRect.left;
+                    const zoneRight = zoneRect.right - vizRect.left;
+                    if (s.x > zoneLeft - 30 && s.x < zoneRight + 30) {
+                        s.speed = Math.max(s.baseSpeed * 0.4, s.speed * 0.995);
+                        // 在危险区附近添加闪烁效果
+                        if (Math.random() < 0.05) {
+                            s.el.querySelector('.ship-light').style.background = '#ff0000';
+                            s.el.querySelector('.ship-light').style.boxShadow = '0 0 8px #ff0000';
+                            setTimeout(() => {
+                                if (s.el.querySelector('.ship-light')) {
+                                    s.el.querySelector('.ship-light').style.background = '#ff4444';
+                                    s.el.querySelector('.ship-light').style.boxShadow = '0 0 6px #ff4444';
+                                }
+                            }, 800);
+                        }
+                    } else {
+                        // 逐渐恢复正常速度
+                        s.speed += (s.baseSpeed - s.speed) * 0.01;
+                    }
+                });
+
+                // 船舶相遇避让
+                for (let j = 0; j < activeShips.length; j++) {
+                    if (i === j) continue;
+                    const other = activeShips[j];
+                    const dist = Math.abs(s.x - other.x);
+                    const yDist = Math.abs(s.y - other.y);
+                    if (dist < 50 && yDist < 25) {
+                        // Y方向避让
+                        const avoidDir = s.y < other.y ? -1 : 1;
+                        s.y += avoidDir * 0.5;
+                        s.y = Math.max(45, Math.min(235, s.y));
+                    }
+                }
+
+                // 超出屏幕则移除
+                if ((s.dir === 1 && s.x > vizWidth + 70) || (s.dir === -1 && s.x < -70)) {
+                    // 消失时淡出
+                    s.el.style.opacity = '0';
+                    s.el.style.transition = 'opacity 0.5s';
+                    setTimeout(() => {
+                        if (s.el.parentNode) s.el.remove();
+                    }, 500);
+                    activeShips.splice(i, 1);
+                }
+            }
+        }
+
+        // 初始化生成几艘船
+        for (let i = 0; i < 5; i++) {
+            const typeInfo = pickShipType();
+            const speed = typeInfo.speed[0] + Math.random() * (typeInfo.speed[1] - typeInfo.speed[0]);
+            const id = shipIdCounter++;
+            const dir = Math.random() > 0.35 ? 1 : -1;
+            const shipObj = {
+                id,
+                type: typeInfo.type,
+                label: typeInfo.label,
+                speed: speed * 0.15,
+                baseSpeed: speed * 0.15,
+                dir,
+                x: dir === 1 ? (50 + Math.random() * (straitViz.offsetWidth - 100)) : (50 + Math.random() * (straitViz.offsetWidth - 100)),
+                y: 45 + Math.random() * 190,
+                wobble: (Math.random() - 0.5) * 6,
+                wobbleSpeed: 0.02 + Math.random() * 0.02,
+                wobblePhase: Math.random() * Math.PI * 2
+            };
+            const el = createShipElement(shipObj);
+            el.style.left = shipObj.x + 'px';
+            if (dir === -1) el.style.transform = 'scaleX(-1)';
+            shipObj.el = el;
+            activeShips.push(shipObj);
+            straitViz.appendChild(el);
+        }
+
+        // 动画循环
+        function animateShips() {
+            updateShips();
+            requestAnimationFrame(animateShips);
+        }
+        animateShips();
+
+        // 生成水面光斑效果
+        function createSeaGlare() {
+            const glare = document.createElement('div');
+            glare.className = 'sea-glare';
+            glare.style.top = (45 + Math.random() * 190) + 'px';
+            glare.style.animationDuration = (6 + Math.random() * 6) + 's';
+            glare.style.animationDelay = Math.random() * 8 + 's';
+            glare.style.width = (30 + Math.random() * 80) + 'px';
+            straitViz.appendChild(glare);
+            
+            // 循环
+            setTimeout(() => {
+                if (glare.parentNode) glare.remove();
+                createSeaGlare();
+            }, 15000 + Math.random() * 10000);
+        }
+        for (let i = 0; i < 5; i++) createSeaGlare();
+
+        // 定期生成新船（模拟受限通行）
+        setInterval(() => {
+            if (activeShips.length < 12) {
+                spawnShip();
+            }
+        }, 2500 + Math.random() * 2000);
+
+        // 随机生成间隔
+        function scheduleNextShip() {
+            const delay = 3000 + Math.random() * 4000;
+            setTimeout(() => {
+                if (activeShips.length < 15) {
+                    spawnShip();
+                }
+                scheduleNextShip();
+            }, delay);
+        }
+        scheduleNextShip();
+
+        // 新闻详情数据（含来源链接）
+        
+
         // 显示新闻详情
         function showNewsDetail(newsId) {
+            console.log('showNewsDetail called with:', newsId);
             const modal = document.getElementById('newsModal');
             const news = newsDetails[newsId];
+            console.log('news:', news);
             if (news) {
                 document.getElementById('modalTitle').textContent = news.title;
                 document.getElementById('modalBody').innerHTML = news.content;
@@ -3074,8 +3078,9 @@
                 modal.classList.add('show');
                 modal.scrollTop = 0;
                 document.body.style.overflow = 'hidden';
+                console.log('Modal should be visible now');
             } else {
-                console.error('News not found:', newsId);
+                alert('未找到新闻详情: ' + newsId);
             }
         }
 
