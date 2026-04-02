@@ -14,10 +14,68 @@
 
         body {
             font-family: 'Courier New', 'Microsoft YaHei', monospace;
-            background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 50%, #0f0f0f 100%);
             color: #d0d0d0;
             overflow-x: hidden;
             min-height: 100vh;
+            background: #0a0a0a;
+            position: relative;
+        }
+
+        /* 动态背景 */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: 
+                radial-gradient(ellipse at 20% 50%, rgba(0, 40, 80, 0.4) 0%, transparent 50%),
+                radial-gradient(ellipse at 80% 20%, rgba(0, 60, 60, 0.3) 0%, transparent 40%),
+                radial-gradient(ellipse at 50% 80%, rgba(40, 0, 60, 0.2) 0%, transparent 45%),
+                radial-gradient(ellipse at 10% 90%, rgba(60, 30, 0, 0.3) 0%, transparent 35%),
+                linear-gradient(135deg, #0a0a0a 0%, #0d1520 25%, #0a1018 50%, #0f0a15 75%, #0a0a0a 100%);
+            z-index: -2;
+            animation: bgShift 20s ease-in-out infinite;
+        }
+
+        /* 动态星点/粒子 */
+        body::after {
+            content: '';
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-image: 
+                radial-gradient(1px 1px at 10% 20%, rgba(100,150,200,0.4), transparent),
+                radial-gradient(1px 1px at 30% 60%, rgba(150,100,200,0.3), transparent),
+                radial-gradient(1px 1px at 50% 10%, rgba(100,200,150,0.3), transparent),
+                radial-gradient(1px 1px at 70% 40%, rgba(200,150,100,0.4), transparent),
+                radial-gradient(1px 1px at 90% 80%, rgba(100,100,200,0.3), transparent),
+                radial-gradient(1px 1px at 20% 90%, rgba(150,200,200,0.3), transparent),
+                radial-gradient(1px 1px at 60% 70%, rgba(200,100,150,0.3), transparent),
+                radial-gradient(1px 1px at 85% 15%, rgba(100,200,100,0.4), transparent),
+                radial-gradient(1px 1px at 45% 45%, rgba(180,180,220,0.3), transparent),
+                radial-gradient(2px 2px at 15% 50%, rgba(100,150,255,0.5), transparent),
+                radial-gradient(2px 2px at 75% 25%, rgba(200,150,100,0.4), transparent),
+                radial-gradient(1px 1px at 5% 75%, rgba(150,100,200,0.3), transparent);
+            z-index: -1;
+            animation: particlesDrift 30s linear infinite;
+        }
+
+        @keyframes bgShift {
+            0%, 100% { 
+                background-position: 0% 0%, 100% 0%, 50% 100%, 0% 100%, 0% 0%;
+            }
+            25% { 
+                background-position: 20% 10%, 80% 20%, 60% 80%, 10% 90%, 10% 10%;
+            }
+            50% { 
+                background-position: 40% 30%, 60% 40%, 40% 60%, 30% 80%, 20% 20%;
+            }
+            75% { 
+                background-position: 20% 20%, 90% 30%, 50% 90%, 20% 70%, 10% 5%;
+            }
+        }
+
+        @keyframes particlesDrift {
+            0% { transform: translate(0, 0); }
+            100% { transform: translate(50px, 30px); }
         }
 
         .container {
@@ -782,11 +840,17 @@
             top: 15px;
             left: 50%;
             transform: translateX(-50%);
-            color: #888888;
+            color: #cccccc;
             font-size: 0.95em;
             text-transform: uppercase;
             letter-spacing: 1.5px;
             font-weight: bold;
+            z-index: 100;
+            text-shadow: 0 2px 8px rgba(0,0,0,0.8), 0 0 20px rgba(100,150,200,0.3);
+            background: rgba(20,30,40,0.7);
+            padding: 8px 20px;
+            border-radius: 20px;
+            border: 1px solid rgba(100,150,200,0.3);
         }
 
         .footer {
@@ -1716,7 +1780,7 @@
         </div>
 
         <div class="footer">
-            <p>数据来源：国际海事组织 | 更新时间：<span class="update-time" id="updateTime">2026-04-02 17:45</span> | 实时监控系统 v5.3 | 📅 每日10:00自动更新</p>
+            <p>数据来源：国际海事组织 | 更新时间：<span class="update-time" id="updateTime">2026-04-02 18:08</span> | 实时监控系统 v5.4 | 📅 每日10:00自动更新</p>
         </div>
     </div>
 
