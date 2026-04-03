@@ -1613,7 +1613,7 @@
                         </tr>
                     </tbody>
                 </table>
-                <p class="data-source">数据来源：上海黄金交易所(SGE) | 更新：2026-04-02 10:30</p>
+                <p class="data-source">数据来源：上海黄金交易所(SGE) | 更新：2026-04-03 11:55</p>
             </div>
 
             <div class="panel full-width">
@@ -1672,6 +1672,11 @@
                             <td>2026-04-02 15:30</td>
                             <td class="clickable news-link" onclick="showNewsDetail('oman_iran')">阿曼称正与伊朗合作确保霍尔木兹海峡安全通行</td>
                             <td><span class="status-indicator warning"></span>中等</td>
+                        </tr>
+                        <tr>
+                            <td>2026-04-03 11:55</td>
+                            <td class="clickable news-link" onclick="showNewsDetail('april3_update')">4月3日数据更新：通行量降至560万桶/日</td>
+                            <td><span class="status-indicator danger"></span>严重</td>
                         </tr>
                         <tr>
                             <td>2026-04-02 10:30:15</td>
@@ -1780,7 +1785,7 @@
         </div>
 
         <div class="footer">
-            <p>数据来源：国际海事组织 | 更新时间：<span class="update-time" id="updateTime">2026-04-02 22:52</span> | 实时监控系统 v5.8 | 📅 每日10:00自动更新</p>
+            <p>数据来源：国际海事组织 | 更新时间：<span class="update-time" id="updateTime">2026-04-03 11:55</span> | 实时监控系统 v5.9 | 📅 每日10:00自动更新</p>
         </div>
     </div>
 
@@ -2453,6 +2458,21 @@ const newsDetails = {
                     </div>
                 `
             },
+            'april3_update': {
+                title: '4月3日数据更新：通行量降至560万桶/日',
+                content: `
+                    <p><strong>事件时间：</strong>2026年4月3日 11:55</p>
+                    <p><strong>事件概述：</strong></p>
+                    <p>霍尔木兹海峡通行量持续下降，最新数据显示日均通行量已降至560万桶/日，较正常水平下降约73%，局势未见缓和。</p>
+                    <p><strong>最新数据：</strong></p>
+                    <p>• 日均通行量：560万桶/日</p>
+                    <p>• 正常通行能力：2,100万桶/日</p>
+                    <p>• 通行率：约27%</p>
+                    <p><strong>价格影响：</strong></p>
+                    <p>• 布伦特原油：~$103.5/桶</p>
+                    <p>• 黄金：~$2,270/盎司</p>
+                `
+            },
             'hormuz_one_month': {
                 title: '霍尔木兹封锁满一个月：伊朗的"不对称武器"奏效',
                 content: `
@@ -2494,10 +2514,10 @@ const newsDetails = {
         const trendChart = new Chart(ctx, {
             type: 'line',
             data: {
-                labels: ['3/27', '3/28', '3/29', '3/30', '3/31', '4/1', '4/2'],
+                labels: ['3/28', '3/29', '3/30', '3/31', '4/1', '4/2', '4/3'],
                 datasets: [{
                     label: '日均通行量（万桶）',
-                    data: [780, 735, 700, 680, 655, 620, 590],
+                    data: [735, 700, 680, 655, 620, 590, 560],
                     borderColor: '#22aa22',
                     backgroundColor: 'rgba(34, 170, 34, 0.1)',
                     borderWidth: 2,
@@ -2718,8 +2738,8 @@ const newsDetails = {
             document.getElementById('updateTime').textContent = `2026-03-31 ${hours}:${minutes}`;
 
             // 模拟数据波动（基于最新局势，通行量持续下降）
-            const baseCapacity = 590 + Math.random() * 60 - 30;
-            const capacity = Math.max(550, Math.round(baseCapacity));
+            const baseCapacity = 560 + Math.random() * 50 - 25;
+            const capacity = Math.max(520, Math.round(baseCapacity));
             const rate = Math.round((capacity / 2100) * 100);
 
             document.getElementById('dailyCapacity').innerHTML = `${capacity}<span class="status-unit">万桶</span>`;
@@ -2732,9 +2752,9 @@ const newsDetails = {
             document.getElementById('otherCount').textContent = Math.floor(1 + Math.random() * 3);
 
             // 更新油价（基于最新价格）
-            const brentBase = 93.5;
-            const wtiBase = 89.2;
-            const gasBase = 4.35;
+            const brentBase = 103.5;
+            const wtiBase = 98.8;
+            const gasBase = 4.50;
             
             const brent = (brentBase + (Math.random() - 0.5) * 2).toFixed(2);
             const wti = (wtiBase + (Math.random() - 0.5) * 2).toFixed(2);
@@ -2779,10 +2799,10 @@ const newsDetails = {
             document.getElementById('vixValue').style.color = vixColor;
 
             // 更新贵金属价格（基于最新价格）
-            const goldBase = 2245;
-            const silverBase = 26.50;
-            const copperBase = 4.60;
-            const platinumBase = 1110;
+            const goldBase = 2270;
+            const silverBase = 27.20;
+            const copperBase = 4.75;
+            const platinumBase = 1140;
             
             const gold = (goldBase + (Math.random() - 0.5) * 50).toFixed(0);
             const silver = (silverBase + (Math.random() - 0.5) * 1).toFixed(2);
@@ -3105,7 +3125,7 @@ const newsDetails = {
 
         // 页面加载完成
         window.addEventListener('load', () => {
-            console.log('🌊 霍尔木兹海峡流通监控系统已启动 - 暗黑主题版 v5.1');
+            console.log('🌊 霍尔木兹海峡流通监控系统已启动 - 暗黑主题版 v5.9');
             updateData();
             checkLoginStatus();
             recordVisit();
